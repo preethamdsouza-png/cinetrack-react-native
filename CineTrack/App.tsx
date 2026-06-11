@@ -12,30 +12,32 @@ const Stack = createNativeStackNavigator();
 
 function HomeTabs() {
   return (
-    <Tab.Navigator 
-      screenOptions={({ route }) => ({ 
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarStyle: { 
-          backgroundColor: '#1E1E2A', 
-          borderTopWidth: 0,
+        tabBarStyle: {
+          backgroundColor: '#1E1E2A',
+          borderTopWidth: 1,
+          borderTopColor: '#0296E5',
           paddingBottom: 20,
-          height: 75,
+          paddingTop: 10,
+          height: 90,
         },
-        tabBarActiveTintColor: '#0296E5', 
-        tabBarInactiveTintColor: '#67686D', 
-        
+        tabBarActiveTintColor: '#0296E5',
+        tabBarInactiveTintColor: '#67686D',
+
         // Wire up your SvgLoader for the tab bar icons
         tabBarIcon: ({ color }) => {
           if (route.name === 'Home') {
             return <SvgLoader name="home" width={20} height={24} color={color} />;
-          } 
-          
+          }
+
           if (route.name === 'Search') {
-            return <SvgLoader name="search" width={20} height={24} color={color}/>;
-          } 
-          
+            return <SvgLoader name="search" width={20} height={24} color={color} />;
+          }
+
           if (route.name === 'WatchList') {
-            return <SvgLoader name="bookmark" width={20} height={24} color={color}/>;
+            return <SvgLoader name="bookmark" width={20} height={24} color={color} />;
           }
 
           return null;
@@ -58,7 +60,7 @@ export default function App() {
         {/* Add the Splash screen here */}
         <Stack.Screen name="Splash" component={SplashScreen} />
         <Stack.Screen name="HomeTabs" component={HomeTabs} />
-       
+
       </Stack.Navigator>
     </NavigationContainer>
   );
