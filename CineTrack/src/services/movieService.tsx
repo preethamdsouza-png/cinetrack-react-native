@@ -61,9 +61,11 @@ const fetchMovies = async (endpoint: string): Promise<Movie[]> => {
 };
 
 const movieService = {
+  getTrendingToday: async (): Promise<Movie[]> => fetchMovies('/trending/movie/day'),
+  getUpComing: async (): Promise<Movie[]> => fetchMovies('/movie/upcoming'),
   getNowPlaying: async (): Promise<Movie[]> => fetchMovies('/movie/now_playing'),
   getPopular: async (): Promise<Movie[]> => fetchMovies('/movie/popular'),
-  getUpcoming: async (): Promise<Movie[]> => fetchMovies('/movie/upcoming'),
+  getTopRated: async (): Promise<Movie[]> => fetchMovies('/movie/top_rated'),
 };
 
 export default movieService;
