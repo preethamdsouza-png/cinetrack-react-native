@@ -2,6 +2,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SvgLoader } from './src/components/SvgLoader';
+import DetailScreen from './src/screens/DetailScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import SearchScreen from './src/screens/SearchScreen';
 import SplashScreen from './src/screens/SplashScreen';
@@ -58,6 +59,7 @@ export default function App() {
       {/* Set initialRouteName to 'Splash' */}
       <Stack.Navigator initialRouteName="Splash" screenOptions={{ headerShown: false }}>
         {/* Add the Splash screen here */}
+        <Stack.Screen name="Details" component={DetailScreen} />
         <Stack.Screen name="Splash" component={SplashScreen} />
         <Stack.Screen name="HomeTabs" component={HomeTabs} />
 
