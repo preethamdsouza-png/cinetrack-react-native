@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#262738',
     height: 48,
     borderRadius: 16,
-    marginHorizontal: 24,
+    marginHorizontal: 16,
     marginTop: 24,
     marginBottom: 16,
     flexDirection: 'row',

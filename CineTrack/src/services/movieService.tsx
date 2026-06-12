@@ -1,6 +1,7 @@
 import axios from 'axios';
 import Constants from 'expo-constants';
 import type { Movie } from '../types/Movie';
+import { MovieDetailData } from '../types/MovieDetail';
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 export const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
@@ -78,6 +79,15 @@ const movieService = {
     });
     return Array.isArray(response.data.results) ? response.data.results : []
   },
+  getMovieDetails: async (id: number): Promise<MovieDetailData> => {
+  const response = await movieClient.get<MovieDetailData>(`/movie/${id}`, {
+    params: {
+      language: 'en-US',
+      append_to_response: 'credits,reviews'
+    }
+  });
+  return response.data;
+}
 };
 
 export default movieService;

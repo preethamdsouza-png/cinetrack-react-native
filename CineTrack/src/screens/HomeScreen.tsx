@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, Image,TextInput,TouchableOpacity, ActivityIndicator, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, FlatList, Image, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet, Dimensions } from 'react-native';
 import movieService, { IMAGE_BASE_URL } from '../services/movieService';
 import type { Movie } from '../types/Movie';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,7 +15,7 @@ const TABS = [
 
 
 
-const HomeScreen = () => {
+const HomeScreen = ({navigation} : any) => {
   const [topMovies, setTopMovies] = useState<Movie[]>([]);
   const [loadingTop, setLoadingTop] = useState(true);
 
@@ -64,7 +64,7 @@ const HomeScreen = () => {
       <Text style={styles.headerTitle}>Trending Today!</Text>
 
       {/* Styled Search Bar */}
-     {/*  <View style={styles.searchContainer}>
+      {/*  <View style={styles.searchContainer}>
         <TextInput
           placeholder="Search"
           placeholderTextColor="#67686D"
@@ -84,7 +84,10 @@ const HomeScreen = () => {
           keyExtractor={(item) => `top-${item.id}`}
           contentContainerStyle={styles.horizontalListContent}
           renderItem={({ item, index }) => (
-            <TouchableOpacity style={styles.topMovieContainer} activeOpacity={0.9}>
+            <TouchableOpacity style={styles.topMovieContainer} activeOpacity={0.9} onPress={() => {
+            // 🚀 Pass movieId as an object in the second argument
+            navigation.navigate('Details', { movieId: item.id });
+          }}>
               {/* Giant background rank numbers styling */}
               <Text style={styles.rankNumber}>{index + 1}</Text>
               <Image
@@ -133,7 +136,7 @@ const HomeScreen = () => {
         ListHeaderComponent={renderHeader}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.mainScrollContent}
-        
+
         // This acts as your dynamic loader zone below the tabs
         ListEmptyComponent={() => (
           loadingGrid ? (
@@ -144,9 +147,12 @@ const HomeScreen = () => {
             <Text style={styles.emptyText}>No movies found.</Text>
           )
         )}
-        
+
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.gridCard} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.gridCard} activeOpacity={0.8} onPress={() => {
+            // 🚀 Pass movieId as an object in the second argument
+            navigation.navigate('Details', { movieId: item.id });
+          }}>
             <Image
               source={{ uri: `${IMAGE_BASE_URL}${item.poster_path}` }}
               style={styles.gridPoster}
