@@ -1,7 +1,9 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { SQLiteProvider } from 'expo-sqlite';
 import { SvgLoader } from './src/components/SvgLoader';
+import { migrateBookmarksDb } from './src/db/bookmarkDB';
 import { GemmaProvider } from './src/llm/GemmaProvider';
 import DetailScreen from './src/screens/DetailScreen';
 import HomeScreen from './src/screens/HomeScreen';
@@ -45,7 +47,7 @@ function HomeTabs() {
           }
 
           if (route.name === 'WatchList') {
-            return <SvgLoader name="bookmark" width={17} height={22} color={color} />;
+            return <SvgLoader name="watchlist" width={17} height={22} color={color} />;
           }
 
           if (route.name === 'Scan') {
@@ -68,7 +70,8 @@ function HomeTabs() {
 export default function App() {
   return (
     <GemmaProvider>
-      <NavigationContainer>
+        <SQLiteProvider databaseName="cinetrack.db" onInit={migrateBookmarksDb}>
+           <NavigationContainer>
         {/* Set initialRouteName to 'Splash' */}
         <Stack.Navigator initialRouteName="Splash" screenOptions={{ headerShown: false }}>
           {/* Add the Splash screen here */}
@@ -78,6 +81,7 @@ export default function App() {
 
         </Stack.Navigator>
       </NavigationContainer>
+      </SQLiteProvider>
     </GemmaProvider>
   );
 }

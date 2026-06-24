@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
+  Alert,
   ActivityIndicator,
   Dimensions,
   Image,
@@ -11,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SvgLoader } from '../components/SvgLoader';
+import { handleBookmarks } from '../hooks/handleBookmarks';
 import movieService, { IMAGE_BASE_URL } from '../services/movieService';
 
 const { width } = Dimensions.get('window');
@@ -20,6 +22,14 @@ const DetailScreen = ({ route, navigation }: any) => {
   const [movie, setMovie] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('About Movie');
+  const [isTogglingBookmark, setIsTogglingBookmark] = useState(false);
+  const [localBookmarked, setLocalBookmarked] = useState<boolean | null>(null);
+  const { toggleBookmark, checkBookmarked } = handleBookmarks() 
+  const persistedBookmarked = movie ? checkBookmarked(movie.id) : false;
+  const isBookMarked = localBookmarked ?? persistedBookmarked;
+  const bookmarkIconName = isBookMarked ? 'bookmarkSelected' : 'BookMarkUnSelected';
+  const bookmarkIconColor = isBookMarked ? '#0296E5' : '#FFFFFF';
+
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -33,6 +43,10 @@ const DetailScreen = ({ route, navigation }: any) => {
       }
     };
     fetchDetails();
+  }, [movieId]);
+
+  useEffect(() => {
+    setLocalBookmarked(null);
   }, [movieId]);
 
   if (loading) {
@@ -58,9 +72,27 @@ const DetailScreen = ({ route, navigation }: any) => {
         <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
           <SvgLoader name="arrowLeft" width={20} height={20} />
         </TouchableOpacity>
-        <TouchableOpacity activeOpacity={0.7}>
-          <Text style={styles.headerIcon}>🔖</Text>
-        </TouchableOpacity>
+        <TouchableOpacity
+           activeOpacity={0.7}
+           disabled={isTogglingBookmark}
+           onPress={async () => {
+             if (!movie) return;
+             const nextValue = !isBookMarked;
+             setLocalBookmarked(nextValue);
+             setIsTogglingBookmark(true);
+             try {
+               await toggleBookmark(movie);
+             } catch (error) {
+               console.error('Bookmark toggle failed:', error);
+               setLocalBookmarked(null);
+               Alert.alert('Bookmark Failed', 'Unable to update bookmark right now. Please try again.');
+             } finally {
+               setIsTogglingBookmark(false);
+             }
+       }}
+>
+  <SvgLoader name={bookmarkIconName} width={20} height={20} color={bookmarkIconColor} />
+</TouchableOpacity>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -303,6 +335,7 @@ const styles = StyleSheet.create({
   tabContainer: {
     flexDirection: 'row',
     marginTop: 32,
+    justifyContent: 'center',
     paddingHorizontal: 24,
     borderBottomWidth: 1,
     borderBottomColor: '#262738',

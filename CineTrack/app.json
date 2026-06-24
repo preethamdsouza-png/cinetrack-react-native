@@ -38,6 +38,7 @@
     },
    "plugins": [
       "expo-asset",
+       "expo-sqlite",
       "./withAndroidGpuSupport.js",
       "react-native-litert-lm",
       [
