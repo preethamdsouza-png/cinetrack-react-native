@@ -1,11 +1,16 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { SQLiteProvider } from 'expo-sqlite';
 import { SvgLoader } from './src/components/SvgLoader';
+import { migrateBookmarksDb } from './src/db/bookmarkDB';
+import { GemmaProvider } from './src/llm/GemmaProvider';
+import DetailScreen from './src/screens/DetailScreen';
 import HomeScreen from './src/screens/HomeScreen';
+import ScanPosterToEventInCalender from './src/screens/ScanPosterToEventInCalender';
 import SearchScreen from './src/screens/SearchScreen';
 import SplashScreen from './src/screens/SplashScreen';
-import WatchListScreen from './src/screens/WatchListScreen';
+import WatchlistScreen from './src/screens/WatchlistScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -23,6 +28,11 @@ function HomeTabs() {
           paddingTop: 10,
           height: 90,
         },
+        tabBarLabelStyle: {
+          fontSize: 12,     
+          fontWeight: '600',
+          marginBottom: 2, 
+        },
         tabBarActiveTintColor: '#0296E5',
         tabBarInactiveTintColor: '#67686D',
 
@@ -37,7 +47,11 @@ function HomeTabs() {
           }
 
           if (route.name === 'WatchList') {
-            return <SvgLoader name="bookmark" width={20} height={24} color={color} />;
+            return <SvgLoader name="watchlist" width={17} height={22} color={color} />;
+          }
+
+          if (route.name === 'Scan') {
+            return <SvgLoader name="scan" width={20} height={24} color={color} />;
           }
 
           return null;
@@ -46,7 +60,8 @@ function HomeTabs() {
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Search" component={SearchScreen} />
-      <Tab.Screen name="WatchList" component={WatchListScreen} options={{ title: 'Watch list' }} />
+      <Tab.Screen name="WatchList" component={WatchlistScreen} options={{ title: 'Watch list' }} />
+      <Tab.Screen name="Scan" component={ScanPosterToEventInCalender} options={{ title: 'Scan' }} />
     </Tab.Navigator>
   );
 };
@@ -54,14 +69,19 @@ function HomeTabs() {
 
 export default function App() {
   return (
-    <NavigationContainer>
-      {/* Set initialRouteName to 'Splash' */}
-      <Stack.Navigator initialRouteName="Splash" screenOptions={{ headerShown: false }}>
-        {/* Add the Splash screen here */}
-        <Stack.Screen name="Splash" component={SplashScreen} />
-        <Stack.Screen name="HomeTabs" component={HomeTabs} />
+    <GemmaProvider>
+        <SQLiteProvider databaseName="cinetrack.db" onInit={migrateBookmarksDb}>
+           <NavigationContainer>
+        {/* Set initialRouteName to 'Splash' */}
+        <Stack.Navigator initialRouteName="Splash" screenOptions={{ headerShown: false }}>
+          {/* Add the Splash screen here */}
+          <Stack.Screen name="Details" component={DetailScreen} />
+          <Stack.Screen name="Splash" component={SplashScreen} />
+          <Stack.Screen name="HomeTabs" component={HomeTabs} />
 
-      </Stack.Navigator>
-    </NavigationContainer>
+        </Stack.Navigator>
+      </NavigationContainer>
+      </SQLiteProvider>
+    </GemmaProvider>
   );
 }

@@ -1,8 +1,9 @@
-import type { Movie } from '../types/Movie';
-import Constants from 'expo-constants';
 import axios from 'axios';
+import Constants from 'expo-constants';
+import type { Movie } from '../types/Movie';
+import { MovieDetailData } from '../types/MovieDetail';
 
-const TMDB_BASE_URL = 'https://api.themoviedb.org//3';
+const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 export const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
 type TmdbMovieListResponse = {
@@ -60,12 +61,33 @@ const fetchMovies = async (endpoint: string): Promise<Movie[]> => {
   }
 };
 
+
 const movieService = {
   getTrendingToday: async (): Promise<Movie[]> => fetchMovies('/trending/movie/day'),
   getUpComing: async (): Promise<Movie[]> => fetchMovies('/movie/upcoming'),
   getNowPlaying: async (): Promise<Movie[]> => fetchMovies('/movie/now_playing'),
   getPopular: async (): Promise<Movie[]> => fetchMovies('/movie/popular'),
   getTopRated: async (): Promise<Movie[]> => fetchMovies('/movie/top_rated'),
+  searchMovies: async (query: string, page: number = 1): Promise<Movie[]> => {
+    const response = await movieClient.get<TmdbMovieListResponse>('/search/movie', {
+      params: {
+        query: query,
+        include_adult: false,   // <-- Hides adult content explicitly
+        language: 'en-US',      // <-- Defaults results to English
+        page: page,             // <-- Supports pagination (defaults to page 1)
+      },
+    });
+    return Array.isArray(response.data.results) ? response.data.results : []
+  },
+  getMovieDetails: async (id: number): Promise<MovieDetailData> => {
+  const response = await movieClient.get<MovieDetailData>(`/movie/${id}`, {
+    params: {
+      language: 'en-US',
+      append_to_response: 'credits,reviews'
+    }
+  });
+  return response.data;
+}
 };
 
 export default movieService;
