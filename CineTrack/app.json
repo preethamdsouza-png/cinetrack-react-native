@@ -9,9 +9,19 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.CineTrack",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Allow CineTrack to access your camera to scan movie posters.",
+        "NSCalendarsUsageDescription": "Allow CineTrack to add opening nights to your calendar."
+      }
     },
     "android": {
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_CALENDAR",
+        "android.permission.WRITE_CALENDAR"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -19,14 +29,33 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.anonymous.CineTrack"
     },
     "web": {
       "output": "single",
       "favicon": "./assets/images/favicon.png"
     },
-    "plugins": [
-      "expo-asset"
+   "plugins": [
+      "expo-asset",
+       "expo-sqlite",
+      "./withAndroidGpuSupport.js",
+      "react-native-litert-lm",
+      [
+        "expo-calendar",
+        {
+          "calendarPermissionRationale": "Allow CineTrack to add movie opening nights to your calendar."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26,
+            "kotlinVersion": "2.3.0"
+          }
+        }
+      ]
     ],
     "experiments": {
       "reactCompiler": true
