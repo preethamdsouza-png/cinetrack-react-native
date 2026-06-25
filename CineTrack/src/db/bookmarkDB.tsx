@@ -25,7 +25,7 @@ export type BookmarkRow = {
 };
 
 export async function migrateBookmarksDb(db: SQLiteDatabase): Promise<void> {
-  const DATABASE_VERSION = 4;
+  const DATABASE_VERSION = 1;
   const row = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
   const current = row?.user_version ?? 0;
   if (current >= DATABASE_VERSION) {

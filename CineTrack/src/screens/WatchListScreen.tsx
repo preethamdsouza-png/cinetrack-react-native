@@ -1,3 +1,6 @@
+import { useFocusEffect } from '@react-navigation/native';
+import { useSQLiteContext } from 'expo-sqlite';
+import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -9,27 +12,37 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SvgLoader } from '../components/SvgLoader';
-import { handleBookmarks } from '../hooks/handleBookmarks';
+import {
+  getAllBookmarks,
+  type BookmarkRow,
+} from '../db/bookmarkDB';
 import { IMAGE_BASE_URL } from '../services/movieService';
 
 export default function WatchlistScreen({ navigation }: any) {
-  const { bookmarks, loading, refresh } = handleBookmarks();
+  const db = useSQLiteContext();
+  const [bookmarks, setBookmarks] = useState<BookmarkRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    try {
+      const rows = await getAllBookmarks(db);
+      setBookmarks(rows ?? []);
+    } finally {
+      setLoading(false);
+    }
+  }, [db]);
+
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh])
+  );
 
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.headerBar}>
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={() => {
-            if (navigation.canGoBack()) {
-              navigation.goBack();
-            }
-          }}
-          style={styles.headerIconButton}
-        >
-          <SvgLoader name="arrowLeft" width={20} height={20} color="#FFFFFF" />
-        </TouchableOpacity>
+      <View style={styles.header}>
         <Text style={styles.headerTitle}>Watch list</Text>
         <View style={styles.headerPlaceholder} />
       </View>
@@ -46,11 +59,14 @@ export default function WatchlistScreen({ navigation }: any) {
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <View style={styles.centerState}>
-              <Text style={styles.emptyText}>No saved movies yet.</Text>
+               <SvgLoader name="emptyWatchlist" width={63} height={76}/>
+               <Text style={styles.emptyTextTitle}>There is no movie yet!</Text>
+               <Text style={styles.emptyTextSubTitle}>Find your movie by Type title, categories, years, etc </Text>
             </View>
           }
           renderItem={({ item }) => {
-            const releaseYear = item.release_date ? item.release_date.slice(0, 4) : 'N/A';
+             if (!item) return null;
+            const releaseYear = item.release_date?.slice(0, 4) ?? 'N/A';
             const ratingText =
               typeof item.vote_average === 'number' ? item.vote_average.toFixed(1) : 'N/A';
             const genreText = item.primary_genre ?? 'Unknown';
@@ -99,13 +115,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#242A32',
   },
-  headerBar: {
-    height: 48,
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     paddingHorizontal: 24,
+    height: 48,
     marginTop: 8,
+  },
+  headerTitle: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
   },
   headerIconButton: {
     width: 36,
@@ -114,16 +135,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headerTitle: {
-    color: '#ECECEC',
-    fontSize: 16,
-    fontWeight: '600',
-  },
   headerPlaceholder: {
     width: 36,
     height: 36,
   },
   listContent: {
+    flexGrow: 1,
     paddingHorizontal: 24,
     paddingTop: 18,
     paddingBottom: 24,
@@ -172,8 +189,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emptyText: {
-    color: '#9CA3AF',
-    fontSize: 14,
+  emptyTextTitle: {
+     marginTop: 10,
+     paddingHorizontal:10,
+     color: '#FFFFFF',
+    fontSize: 16,
   },
+  emptyTextSubTitle: {
+    marginTop: 8,
+    paddingHorizontal:10,
+    color: '#AAAAAA',
+    fontSize: 14,
+  }
 });

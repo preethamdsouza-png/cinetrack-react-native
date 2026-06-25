@@ -9,6 +9,7 @@ import ArrowLeft from '../assets/arrow-left.svg';
 import Scan from '../assets/scan.svg';
 import BookMarkSelected from '../assets/bookmark_selected.svg';
 import BookMarkUnSelected from '../assets/bookmark_unselected.svg';
+import EmptyWatchlist from '../assets/empty_watchlist.svg';
 
 
 
@@ -23,7 +24,8 @@ export const SVG_IMAGES = {
   arrowLeft:ArrowLeft,
   scan:Scan,
   bookmarkSelected:BookMarkSelected,
-  BookMarkUnSelected:BookMarkUnSelected
+  BookMarkUnSelected:BookMarkUnSelected,
+  emptyWatchlist:EmptyWatchlist
 } as const satisfies Record<string, React.FC<SvgProps>>;
 
 export type SvgImageName = keyof typeof SVG_IMAGES;

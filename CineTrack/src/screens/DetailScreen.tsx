@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
-  Alert,
   ActivityIndicator,
+  Alert,
   Dimensions,
   Image,
   ScrollView,
@@ -74,6 +74,7 @@ const DetailScreen = ({ route, navigation }: any) => {
         </TouchableOpacity>
         <TouchableOpacity
            activeOpacity={0.7}
+           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
            disabled={isTogglingBookmark}
            onPress={async () => {
              if (!movie) return;
@@ -82,6 +83,7 @@ const DetailScreen = ({ route, navigation }: any) => {
              setIsTogglingBookmark(true);
              try {
                await toggleBookmark(movie);
+               Alert.alert(nextValue ? 'Bookmarked Movie' : 'Removed from watchlist', nextValue ? 'Added to your watchlist successfully!' : 'Removed from your watchlist successfully!');
              } catch (error) {
                console.error('Bookmark toggle failed:', error);
                setLocalBookmarked(null);

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSQLiteContext } from 'expo-sqlite';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   addBookmark,
   getAllBookmarks,
@@ -18,7 +18,7 @@ export function handleBookmarks() {
     setLoading(true);
     try {
       const rows = await getAllBookmarks(db);
-      setBookmarks(rows);
+      setBookmarks(rows ?? []);
     } finally {
       setLoading(false);
     }
@@ -28,7 +28,7 @@ export function handleBookmarks() {
     refresh();
   }, [refresh]);
 
-  const bookmarkedIds = useMemo(() => new Set(bookmarks.map((b) => b.tmdb_id)), [bookmarks]);
+  const bookmarkedIds = useMemo(() => new Set((bookmarks ?? []).map((b) => b.tmdb_id)), [bookmarks]);
 
   const toggleBookmark = useCallback(
     async (movie: BookmarkMovieInput) => {
@@ -39,6 +39,7 @@ export function handleBookmarks() {
         await addBookmark(db, movie);
       }
       await refresh();
+      return !exists;
     },
     [db, refresh]
   );
