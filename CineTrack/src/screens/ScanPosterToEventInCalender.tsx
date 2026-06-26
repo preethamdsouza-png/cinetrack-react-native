@@ -3,16 +3,16 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as FileSystem from 'expo-file-system/legacy';
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useGemma } from '../llm/GemmaProvider';
+// NOTE: Make sure to point this hook to your new MiniCPM loader or native llama runner
+import { useMiniCPM } from '../llm/MiniCPMProvider'; 
 import movieService from '../services/movieService';
 
-
-// Safely grab your API key exported by Expo Env
-const TMDB_API_KEY = process.env.EXPO_PUBLIC_TMDB_API_KEY;
 const ANALYSIS_IMAGE_DIR = `${FileSystem.cacheDirectory}litert-analysis`;
 const MAX_LLM_RESPONSE_CHARS = 12000;
+
 const normalizeLocalFilePath = (uri: string): string =>
   uri.startsWith('file://') ? uri.replace('file://', '') : uri;
+
 const extractJsonObject = (raw: string): string => {
   const startIndex = raw.indexOf('{');
   const endIndex = raw.lastIndexOf('}');
@@ -30,19 +30,21 @@ type PosterExtraction = {
 export default function ScanPosterToEventInCalender({ navigation }: any) {
   const camera = useRef<React.ComponentRef<typeof CameraView>>(null);
   const [permission, requestPermission] = useCameraPermissions();
-  const { llm, isReady, isInitializing, initError, activeBackend, loadedModelPath, ensureLoaded } =
-    useGemma();
+  
+  // Updated Hook Context for the 1B model
+  const { llm, isReady, isInitializing, initError, ensureLoaded } = useMiniCPM();
 
   const [isProcessing, setIsProcessing] = useState(false);
-  const [statusText, setStatusText] = useState('Initializing Local Gemma Engine...');
+  const [statusText, setStatusText] = useState('Initializing Local MiniCPM Engine...');
 
-  // 1. Load the model on mount
   useEffect(() => {
-    if (isProcessing) {
-      return;
-    }
+    ensureLoaded();
+  }, [ensureLoaded]);
+
+  useEffect(() => {
+    if (isProcessing) return;
     if (isInitializing) {
-      setStatusText('Initializing Local Gemma Engine...');
+      setStatusText('Initializing Local MiniCPM Engine...');
       return;
     }
     if (initError) {
@@ -50,11 +52,10 @@ export default function ScanPosterToEventInCalender({ navigation }: any) {
       return;
     }
     if (isReady) {
-      setStatusText(`Scan a movie poster!`);
+      setStatusText(`Scan a movie poster! (MiniCPM-V Active)`);
     }
-  }, [activeBackend, initError, isInitializing, isProcessing, isReady, loadedModelPath]);
+  }, [isInitializing, isProcessing, isReady, initError]);
 
-  // 2. Capture photograph & feed down to Gemma's Vision layers
   const handleCaptureAndAnalyze = async () => {
     if (!camera.current || isProcessing) return;
 
@@ -63,13 +64,14 @@ export default function ScanPosterToEventInCalender({ navigation }: any) {
 
     try {
       const ready = await ensureLoaded();
-      if (!ready) {
-        throw new Error('Gemma model is not loaded. Please wait for initialization to complete.');
+      if (!ready || !llm) {
+        throw new Error('Model is not loaded. Please wait for initialization.');
       }
 
+      // Optimized camera settings for blazing fast local vision speeds
       const photo = await camera.current.takePictureAsync({
-        quality: 0.75,
-        skipProcessing: false,
+        quality: 0.4,
+        skipProcessing: true,
       });
       if (!photo?.uri) {
         throw new Error('Camera did not return an image path.');
@@ -86,36 +88,31 @@ export default function ScanPosterToEventInCalender({ navigation }: any) {
       }
 
       const stableImageUri = `${ANALYSIS_IMAGE_DIR}/${Date.now()}.jpg`;
-      await FileSystem.copyAsync({
-        from: photo.uri,
-        to: stableImageUri,
-      });
+      await FileSystem.copyAsync({ from: photo.uri, to: stableImageUri });
 
-      const stableInfo = await FileSystem.getInfoAsync(stableImageUri);
-      if (!stableInfo.exists || !stableInfo.size || stableInfo.size <= 0) {
-        throw new Error(`Stable image file is invalid: ${stableImageUri}`);
-      }
+      setStatusText('MiniCPM is processing image tokens...');
 
-      setStatusText('Gemma is parsing pixels locally...');
+      // Formatted prompt syntax specifically tuned for MiniCPM-V 4.6
+      const prompt = `<user>\nAnalyze this movie poster and extract the main movie title and release year (if visible).
+Return ONLY valid JSON with this exact shape:
+{
+  "movieTitle": string | null,
+  "releaseYear": string | null
+}
+Do not write markdown backticks or any conversational fillers, return only the JSON raw string.\n<assistant>\n`;
 
-      const prompt = `
-        Analyze this movie poster and extract the main movie title and release year (if visible).
-        Return ONLY valid JSON (no markdown, no extra text) with this exact shape:
-        {
-          "movieTitle": string | null,
-          "releaseYear": string | null
-        }
-      `.trim();
-
-      // Use absolute file path API; this avoids cross-thread JS ArrayBuffer errors.
       const imagePath = normalizeLocalFilePath(stableImageUri);
+      console.log('Calling sendMessageWithImage with path:', imagePath);
+      console.log('Prompt length:', prompt.length);
+      
+      setStatusText('Analyzing image... This may take 1-2 minutes...');
+      
       const rawResponse = await llm.sendMessageWithImage(prompt, imagePath);
-      const responseText =
-        typeof rawResponse === 'string' ? rawResponse : String(rawResponse ?? '');
-      const boundedResponse =
-        responseText.length > MAX_LLM_RESPONSE_CHARS
-          ? responseText.slice(0, MAX_LLM_RESPONSE_CHARS)
-          : responseText;
+      console.log('Got response from model, length:', rawResponse?.length);
+      
+      const responseText = typeof rawResponse === 'string' ? rawResponse : String(rawResponse ?? '');
+      const boundedResponse = responseText.length > MAX_LLM_RESPONSE_CHARS ? responseText.slice(0, MAX_LLM_RESPONSE_CHARS) : responseText;
+      
       const cleanJsonString = extractJsonObject(
         boundedResponse
           .replace('```json', '')
@@ -138,7 +135,6 @@ export default function ScanPosterToEventInCalender({ navigation }: any) {
     }
   };
 
-  // 3. Look up exact metadata on TMDB & commit to Native Calendar
   const matchWithTmdbAndSchedule = async (extraction: PosterExtraction) => {
     const primaryTitle = extraction.movieTitle?.trim();
     if (!primaryTitle) {
@@ -154,23 +150,21 @@ export default function ScanPosterToEventInCalender({ navigation }: any) {
     }
 
     const movieMatch = data[0];
-    const releaseDate = movieMatch.release_date; // Expected string format: YYYY-MM-DD
+    const releaseDate = movieMatch.release_date;
 
     if (!releaseDate) {
-      Alert.alert('Release Pending', `"${movieMatch.title}" has no confirmed release date on TMDB yet.`);
+      Alert.alert('Release Pending', `"${movieMatch.title}" has no confirmed release date.`);
       return;
     }
 
     setStatusText('Scheduling Calendar Entry...');
     
-    // Request permission to write events
     const { status } = await Calendar.requestCalendarPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Permission Denied', 'Calendar write permission is required.');
       return;
     }
 
-    // Find the primary system calendar container (Required target on Android)
     const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
     const defaultCalendar = calendars.find(cal => cal.isPrimary) || calendars[0];
 
@@ -182,7 +176,6 @@ export default function ScanPosterToEventInCalender({ navigation }: any) {
     const eventTimeStart = new Date(`${releaseDate}T19:00:00`);
     const eventTimeEnd = new Date(`${releaseDate}T21:30:00`);
 
-    // Create the native calendar block
     await Calendar.createEventAsync(defaultCalendar.id, {
       title: `${movieMatch.title} - Opening Night!`,
       startDate: eventTimeStart,
@@ -192,8 +185,8 @@ export default function ScanPosterToEventInCalender({ navigation }: any) {
     });
 
     Alert.alert(
-      'Movie Added to your Calender!',
-      `"${movieMatch.title}" successfully added to your native device calendar for ${releaseDate}!`,
+      'Movie Added to your Calendar!',
+      `"${movieMatch.title}" successfully added!`,
       [
         {
           text: 'OK',
@@ -203,12 +196,10 @@ export default function ScanPosterToEventInCalender({ navigation }: any) {
     );
   };
 
-  // 1. Wait for Expo to check the hardware permissions
   if (!permission) {
     return <View style={styles.centerBox}><ActivityIndicator color="#FFF" /></View>;
   }
 
-  // 2. Render system permission fallback if denied
   if (!permission.granted) {
     return (
       <View style={styles.centerBox}>
@@ -224,13 +215,7 @@ export default function ScanPosterToEventInCalender({ navigation }: any) {
 
   return (
     <View style={styles.container}>
-      {/* Background Live Camera Render View */}
-     <CameraView 
-       ref={camera} 
-       style={StyleSheet.absoluteFill} 
-      facing="back"
-      />      
-      {/* HUD Controls Container Overlay */}
+      <CameraView ref={camera} style={StyleSheet.absoluteFill} facing="back" />      
       <View style={styles.overlayContainer}>
         <View style={styles.hudBubble}>
           <Text style={styles.statusText}>{statusText}</Text>
@@ -242,7 +227,6 @@ export default function ScanPosterToEventInCalender({ navigation }: any) {
             style={[styles.captureButton, !isReady && styles.captureButtonDisabled]}
             onPress={handleCaptureAndAnalyze}
             disabled={!isReady}
-            accessibilityState={{ disabled: !isReady }}
           >
             <View style={styles.innerCaptureCircle} />
           </TouchableOpacity>

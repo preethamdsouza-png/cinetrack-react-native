@@ -12,8 +12,6 @@ import BookMarkUnSelected from '../assets/bookmark_unselected.svg';
 import EmptyWatchlist from '../assets/empty_watchlist.svg';
 
 
-
-
 export const SVG_IMAGES = {
   splashImage: SplashImage,
   home: HomeIcon,

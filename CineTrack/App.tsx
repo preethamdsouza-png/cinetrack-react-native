@@ -4,13 +4,13 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SQLiteProvider } from 'expo-sqlite';
 import { SvgLoader } from './src/components/SvgLoader';
 import { migrateBookmarksDb } from './src/db/bookmarkDB';
-import { GemmaProvider } from './src/llm/GemmaProvider';
+import { MiniCPMProvider } from './src/llm/MiniCPMProvider';
 import DetailScreen from './src/screens/DetailScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import ScanPosterToEventInCalender from './src/screens/ScanPosterToEventInCalender';
 import SearchScreen from './src/screens/SearchScreen';
 import SplashScreen from './src/screens/SplashScreen';
-import WatchlistScreen from './src/screens/WatchlistScreen';
+import WatchlistScreen from './src/screens/WatchListScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -69,7 +69,7 @@ function HomeTabs() {
 
 export default function App() {
   return (
-    <GemmaProvider>
+    <MiniCPMProvider>
         <SQLiteProvider databaseName="cinetrack.db" onInit={migrateBookmarksDb}>
            <NavigationContainer>
         {/* Set initialRouteName to 'Splash' */}
@@ -82,6 +82,6 @@ export default function App() {
         </Stack.Navigator>
       </NavigationContainer>
       </SQLiteProvider>
-    </GemmaProvider>
+    </MiniCPMProvider>
   );
 }

@@ -13,6 +13,7 @@
     "expo-file-system": "~56.0.7",
     "expo-image-manipulator": "~56.0.19",
     "expo-sqlite": "~56.0.5",
+    "llama.rn": "^0.12.5",
     "react": "19.2.3",
     "react-native": "0.85.3",
     "react-native-litert-lm": "^0.4.2",
