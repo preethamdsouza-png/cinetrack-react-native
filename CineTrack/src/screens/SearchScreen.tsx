@@ -65,6 +65,18 @@ const SearchScreen = ({ navigation }: any) => {
         <Text style={styles.searchBarIcon}>🔍</Text>
       </View>
 
+      {/* 3. AI Search Button */}
+      <View style={styles.aiSearchContainer}>
+        <TouchableOpacity
+          style={styles.aiSearchButton}
+          activeOpacity={0.85}
+          onPress={() => navigation.navigate('AISearch')}
+        >
+          <Text style={styles.aiSearchIcon}>✨</Text>
+          <Text style={styles.aiSearchText}>Try AI-Powered Search</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* 3. Results Section */}
       {loading ? (
         <View style={styles.centerLoader}>
@@ -264,6 +276,28 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 80,
     fontSize: 15,
+  },
+  aiSearchContainer: {
+    paddingHorizontal: 24,
+    marginBottom: 12,
+  },
+  aiSearchButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0296E5',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  aiSearchIcon: {
+    fontSize: 16,
+    marginRight: 8,
+  },
+  aiSearchText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '600',
   },
 });
 
