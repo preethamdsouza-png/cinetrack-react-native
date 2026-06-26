@@ -413,9 +413,14 @@ export default function AISearchScreen({ navigation }: any) {
         }
 
         setSearchState('summarizing');
-        const review = await executePass2(queryText.trim(), movies);
-
-        setGemmaReview(review);
+        try {
+          const review = await executePass2(queryText.trim(), movies);
+          setGemmaReview(review);
+        } catch (pass2Error) {
+          console.log('⚠️ Pass 2 failed during refinement, using simple message');
+          const activeVibes = newActiveBadges.join(', ');
+          setGemmaReview(`Showing ${movies.length} movies for your search. Active mood filters: ${activeVibes}. These moods help frame the recommendations, though the core genre-based results remain consistent.`);
+        }
         setSearchState('complete');
       } catch (error) {
         setSearchState('error');
