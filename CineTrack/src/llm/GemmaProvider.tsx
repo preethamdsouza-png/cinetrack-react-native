@@ -96,11 +96,14 @@ export function GemmaProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    ensureLoaded();
-    return () => {
-      llmRef.current.close();
+    const init = async () => {
+      if (!readyRef.current && !initInFlightRef.current) {
+        await ensureLoaded();
+      }
     };
-  }, [ensureLoaded]);
+    init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <GemmaContext.Provider

@@ -5,12 +5,13 @@ import { SQLiteProvider } from 'expo-sqlite';
 import { SvgLoader } from './src/components/SvgLoader';
 import { migrateBookmarksDb } from './src/db/bookmarkDB';
 import { GemmaProvider } from './src/llm/GemmaProvider';
+import AISearchScreen from './src/screens/AISearchScreen';
 import DetailScreen from './src/screens/DetailScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import ScanPosterToEventInCalender from './src/screens/ScanPosterToEventInCalender';
 import SearchScreen from './src/screens/SearchScreen';
 import SplashScreen from './src/screens/SplashScreen';
-import WatchlistScreen from './src/screens/WatchlistScreen';
+import WatchlistScreen from './src/screens/WatchListScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -71,17 +72,15 @@ export default function App() {
   return (
     <GemmaProvider>
         <SQLiteProvider databaseName="cinetrack.db" onInit={migrateBookmarksDb}>
-           <NavigationContainer>
-        {/* Set initialRouteName to 'Splash' */}
-        <Stack.Navigator initialRouteName="Splash" screenOptions={{ headerShown: false }}>
-          {/* Add the Splash screen here */}
-          <Stack.Screen name="Details" component={DetailScreen} />
-          <Stack.Screen name="Splash" component={SplashScreen} />
-          <Stack.Screen name="HomeTabs" component={HomeTabs} />
-
-        </Stack.Navigator>
-      </NavigationContainer>
-      </SQLiteProvider>
+          <NavigationContainer>
+            <Stack.Navigator initialRouteName="Splash" screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="Splash" component={SplashScreen} />
+              <Stack.Screen name="HomeTabs" component={HomeTabs} />
+              <Stack.Screen name="Details" component={DetailScreen} />
+              <Stack.Screen name="AISearch" component={AISearchScreen} />
+            </Stack.Navigator>
+          </NavigationContainer>
+        </SQLiteProvider>
     </GemmaProvider>
   );
 }

@@ -110,18 +110,27 @@ export default function ScanPosterToEventInCalender({ navigation }: any) {
       // Use absolute file path API; this avoids cross-thread JS ArrayBuffer errors.
       const imagePath = normalizeLocalFilePath(stableImageUri);
       const rawResponse = await llm.sendMessageWithImage(prompt, imagePath);
+      console.log('🤖 Gemma raw response for poster:', rawResponse);
+      
       const responseText =
         typeof rawResponse === 'string' ? rawResponse : String(rawResponse ?? '');
       const boundedResponse =
         responseText.length > MAX_LLM_RESPONSE_CHARS
           ? responseText.slice(0, MAX_LLM_RESPONSE_CHARS)
           : responseText;
-      const cleanJsonString = extractJsonObject(
-        boundedResponse
-          .replace('```json', '')
-          .replace('```', '')
-          .trim()
-      );
+      
+      let cleanJsonString = boundedResponse
+        .replace(/```json/g, '')
+        .replace(/```/g, '')
+        .trim();
+      
+      cleanJsonString = extractJsonObject(cleanJsonString);
+      
+      if (!cleanJsonString || cleanJsonString.length < 2) {
+        throw new Error('Gemma did not return valid JSON. Raw response: ' + boundedResponse.substring(0, 100));
+      }
+      
+      console.log('📋 Cleaned JSON for parsing:', cleanJsonString);
 
       const parsedData = JSON.parse(cleanJsonString) as PosterExtraction;
 
